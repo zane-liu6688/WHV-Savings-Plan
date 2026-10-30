@@ -217,9 +217,9 @@ export default function SettingsScreen() {
         />
       </Card>
 
-      <Card title="☁️ 云同步（运营商：Supabase · 海外节点）" accent="primary">
-        <Text style={styles.note}>当前云同步由 Supabase（新加坡节点）提供，已内置服务地址与 Key，直接用邮箱注册 / 登录即可，两台手机登同一账号就能共享数据。下面的地址和 Key 已自动填好，不用动它。</Text>
-        <LabeledInput label="Supabase URL（已内置）" placeholder={sync.DEFAULT_SUPABASE_URL} value={cfgUrl} onChange={setCfgUrl} flex={2} />
+      <Card title="☁️ 云同步（运营商：Supabase · 需自备账号）" accent="primary">
+        <Text style={styles.note}>本项目不内置任何云服务账号。想用 Supabase，先自己免费注册一个项目，在 SQL Editor 执行 src/sync/schema.sql 建表，再把 Project URL 和 publishable key 填到下面（两台手机登录同一账号即可共享数据）。</Text>
+        <LabeledInput label="Supabase URL" placeholder="https://xxxx.supabase.co" value={cfgUrl} onChange={setCfgUrl} flex={2} />
         <LabeledInput label="public key（已内置）" placeholder="sb_publishable_..." value={cfgKey} onChange={setCfgKey} flex={2} />
         <View style={[styles.btnRow, isSmall && styles.btnRowCol]}>
           <AddButton title="保存自定义配置" onPress={onSaveCfg} />
