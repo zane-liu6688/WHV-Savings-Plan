@@ -65,7 +65,9 @@ export interface Analysis {
 
 export interface CalcResult {
   totalGoal: number;
-  goalDay: number;          // 每日必须攒下的死目标
+  goalDay: number;          // 每日必须攒下的死目标（= totalGoal / goalDays）
+  goalDays: number;         // 平摊基准天数（跟随年份条数动态变化）
+  goalYears: number;        // 平摊基准年数
 
   grossYear: number;        // 全年税前总收入
   taxYear: number;          // ATO 全年总税收
