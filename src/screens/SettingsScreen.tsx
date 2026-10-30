@@ -32,15 +32,14 @@ export default function SettingsScreen() {
   useEffect(() => {
     (async () => {
       const cfg = await sync.loadConfig();
-      if (cfg) {
-        setCfgUrl(cfg.url);
-        setCfgKey(cfg.anonKey);
-        setSyncStatus('已配置，未登录');
-      }
+      setCfgUrl(cfg.url);
+      setCfgKey(cfg.anonKey);
       const e = await sync.getSessionEmail();
       if (e) {
         setLoggedEmail(e);
         setSyncStatus(`已登录：${e}`);
+      } else {
+        setSyncStatus(cfg.isDefault ? '云服务已内置，注册或登录即可同步' : '已配置自定义云服务，未登录');
       }
     })();
   }, []);
@@ -102,12 +101,20 @@ export default function SettingsScreen() {
 
   const onSaveCfg = async () => {
     if (!cfgUrl || !cfgKey) {
-      Alert.alert('提示', '请填写 Supabase 地址和 Key');
+      Alert.alert('提示', '地址和 Key 不能为空');
       return;
     }
     await sync.configure(cfgUrl.trim(), cfgKey.trim());
-    setSyncStatus('已配置，未登录');
-    Alert.alert('已保存', 'Supabase 配置已保存');
+    setSyncStatus('已保存自定义云服务配置');
+    Alert.alert('已保存', '自定义 Supabase 配置已保存');
+  };
+
+  const onResetCfg = async () => {
+    await sync.resetConfig();
+    setCfgUrl(sync.DEFAULT_SUPABASE_URL);
+    setCfgKey(sync.DEFAULT_SUPABASE_KEY);
+    setSyncStatus('云服务已内置，注册或登录即可同步');
+    Alert.alert('已恢复默认', '已切换回内置云同步服务');
   };
 
   const onSignUp = async () => {
@@ -157,7 +164,7 @@ export default function SettingsScreen() {
   const onSignOut = async () => {
     await sync.signOut();
     setLoggedEmail(null);
-    setSyncStatus('已配置，未登录');
+    setSyncStatus('已登出，可重新登录');
   };
 
   return (
@@ -166,7 +173,9 @@ export default function SettingsScreen() {
         <LabeledInput label="自定义长期攒钱总目标 (AUD)" placeholder="例如 150000" value={goalText} onChange={onGoalChange} keyboardType="numeric" />
         <ResultBox accent="primary">
           <Text style={{ fontSize: 15, lineHeight: 22 }}>
-            平摊基准 <Text style={{ fontWeight: '800' }}>1095 天</Text> (365×3){'\n'}
+            平摊基准 <Text style={{ fontWeight: '800' }}>{r.goalDays} 天</Text> (365×{r.goalYears})
+            {years.length === 0 ? ' · 未添加年份，按默认 3 年计算' : ` · 共 ${years.length} 个年份`}
+            {'\n'}
             每天雷打不动必须攒下：<Text style={{ fontWeight: '800', color: colors.redDark }}>${r.goalDay.toFixed(2)} AUD / 天</Text>
           </Text>
         </ResultBox>
@@ -208,11 +217,14 @@ export default function SettingsScreen() {
         />
       </Card>
 
-      <Card title="云同步（Supabase，可选）" accent="primary">
-        <Text style={styles.note}>在 Supabase 建项目并在 SQL Editor 执行 schema.sql 后，填入下方地址与 anon key。两台手机登录同一账号即可实时共享数据。</Text>
-        <LabeledInput label="Supabase URL" placeholder="https://xxxx.supabase.co" value={cfgUrl} onChange={setCfgUrl} flex={2} />
-        <LabeledInput label="anon public key" placeholder="eyJ..." value={cfgKey} onChange={setCfgKey} flex={2} />
-        <AddButton title="保存 Supabase 配置" onPress={onSaveCfg} />
+      <Card title="云同步（已内置，无需填写）" accent="primary">
+        <Text style={styles.note}>云同步服务已内置，直接用邮箱注册 / 登录即可，两台手机登同一账号就能共享数据。下面的地址和 Key 已自动填好，不用动它。</Text>
+        <LabeledInput label="Supabase URL（已内置）" placeholder={sync.DEFAULT_SUPABASE_URL} value={cfgUrl} onChange={setCfgUrl} flex={2} />
+        <LabeledInput label="public key（已内置）" placeholder="sb_publishable_..." value={cfgKey} onChange={setCfgKey} flex={2} />
+        <View style={[styles.btnRow, isSmall && styles.btnRowCol]}>
+          <AddButton title="保存自定义配置" onPress={onSaveCfg} />
+          <DangerButton title="恢复默认" onPress={onResetCfg} />
+        </View>
 
         <View style={styles.sep} />
 
