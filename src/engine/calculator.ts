@@ -1,7 +1,9 @@
 import type { AppData, CalcResult, Analysis, YearProjection } from '../types';
 import { calculateWhvTax, getMarginalRate } from './tax';
 
-export const DAYS_IN_3YEAR_CYCLE = 1095; // 365 × 3，长期目标平摊基准
+export const DAYS_PER_YEAR = 365;
+export const DEFAULT_GOAL_YEARS = 3; // 未添加任何年份时的默认平摊年数
+export const DAYS_IN_3YEAR_CYCLE = DAYS_PER_YEAR * DEFAULT_GOAL_YEARS; // 兼容旧引用
 export const DAYS_IN_MONTH = 30.4167;
 
 /**
@@ -45,8 +47,10 @@ export function compute(data: AppData): CalcResult {
     totalBigDayCost += b.price / days;
   }
 
-  // 6. 长期攒钱死目标
-  const goalDay = totalGoal / DAYS_IN_3YEAR_CYCLE;
+  // 6. 长期攒钱死目标（平摊基准随「年份投影」条数动态变化）
+  const goalYears = years.length > 0 ? years.length : DEFAULT_GOAL_YEARS;
+  const goalDays = goalYears * DAYS_PER_YEAR;
+  const goalDay = goalDays > 0 ? totalGoal / goalDays : 0;
 
   // 7. 真实收支核算
   const auditNetDay = netDay;
@@ -95,6 +99,8 @@ export function compute(data: AppData): CalcResult {
   return {
     totalGoal,
     goalDay,
+    goalDays,
+    goalYears,
     grossYear,
     taxYear,
     netYear,
